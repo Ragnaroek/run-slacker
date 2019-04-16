@@ -1,0 +1,5 @@
+prog = "ls"
+args = ["-alh"]
+
+[slack]
+hook = "https://add.slack.url.here"
