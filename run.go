@@ -46,7 +46,7 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("error getting error"))
 		}
-		panic(fmt.Sprintf("Error running program, err text: %s", errText))
+		fmt.Printf("Error running program, err text: %s\n", errText)
 	}
 
 	slack(&config, string(out))
