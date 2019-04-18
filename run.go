@@ -17,6 +17,7 @@ type Slack struct {
 }
 
 type Config struct {
+	Name *string
 	Dir   string
 	Prog  string
 	Args  []string
@@ -41,20 +42,45 @@ func main() {
 	cmd.Dir = config.Dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		//TODO slack panic
-		fmt.Printf("Error running program, err text: %s\n", err.Error())
+		if exitError, ok := err.(*exec.ExitError); ok {
+			//prog failed, slack err message with err output
+			// exitError.ExitCode()
+			fmt.Printf("exit Code = %#v", exitError)
+		} else {
+			fmt.Printf("out = %#v", out)
+			// slack undefined error with err output
+		}
+		return
 	}
 
-	slack(&config, string(out))
+	//TODO add output if something there
+	slack(&config, runOkMessage(&config))
 }
 
-type slackPayload struct {
-	Text string `json:"text"`
+//err message
+/*
+[
+	{
+		"type": "section",
+		"text": {
+			"type": "mrkdwn",
+			"text": ":red_circle: Mother failed (exit code -1)\n```super long text```"
+		}
+	},
+
+]
+*/
+
+func runOkMessage(conf *Config) *SlackBlock {
+	name := fmt.Sprintf("`%s`", conf.Prog)
+	if conf.Name != nil {
+		name = *conf.Name
+	}
+	return section(markdownText(fmt.Sprintf(":large_blue_circle: %s ok", name)))
 }
 
-func slack(conf *Config, msg string) {
-	payload := slackPayload{Text: msg}
-	payloadStr, err := json.Marshal(payload)
+func slack(conf *Config, msg *SlackBlock) {
+	payloadStr, err := json.Marshal(SlackMessage{Blocks: []*SlackBlock{msg}})
 	if err != nil {
 		panic(fmt.Sprintf("Could not create slack message: %#v", err))
 	}
@@ -70,4 +96,29 @@ func slack(conf *Config, msg string) {
 		}
 		panic(fmt.Sprintf("Got unexpected response from slack: %s", body))
 	}
+}
+
+type SlackMessage struct {
+	Blocks []*SlackBlock `json:"blocks"`
+}
+
+type SlackBlock struct {
+	Type string `json:"type"`
+	Text *Text  `json:"text"`
+}
+
+func section(text *Text) *SlackBlock {
+	return &SlackBlock{
+		Type: "section",
+		Text: text,
+	}
+}
+
+type Text struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+func markdownText(msg string) *Text {
+	return &Text{Type: "mrkdwn", Text: msg}
 }

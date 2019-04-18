@@ -1,5 +1,7 @@
+dir = "/home/user/bin" # working dir of command
 prog = "ls"
 args = ["-alh"]
+name = "ls command" # optional, description of the command (if not set the prog name is used)
 
 [slack]
 hook = "https://add.slack.url.here"
