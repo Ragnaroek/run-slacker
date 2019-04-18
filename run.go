@@ -42,11 +42,7 @@ func main() {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		//TODO slack panic
-		errText, err := json.Marshal(err)
-		if err != nil {
-			panic(fmt.Sprintf("error getting error"))
-		}
-		fmt.Printf("Error running program, err text: %s\n", errText)
+		fmt.Printf("Error running program, err text: %s\n", err.Error())
 	}
 
 	slack(&config, string(out))
