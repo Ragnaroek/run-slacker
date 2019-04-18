@@ -40,10 +40,9 @@ func main() {
 	cmd := exec.Command(config.Prog, config.Args...)
 	cmd.Dir = config.Dir
 	out, err := cmd.CombinedOutput()
-
 	if err != nil {
 		//TODO slack panic
-		panic(fmt.Sprintf("Error running program: %#v", err))
+		panic(fmt.Sprintf("Error running program: %s", fmt.Sprint(err)))
 	}
 
 	slack(&config, string(out))
