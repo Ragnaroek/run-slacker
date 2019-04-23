@@ -17,7 +17,7 @@ type Slack struct {
 }
 
 type Config struct {
-	Name *string
+	Name  *string
 	Dir   string
 	Prog  string
 	Args  []string
@@ -34,7 +34,6 @@ func main() {
 	config := Config{}
 	_, err := toml.DecodeFile(confFile, &config)
 	if err != nil {
-		//TODO slack panic
 		panic(fmt.Sprintf("Error reading config file: %#v", err))
 	}
 
@@ -43,40 +42,44 @@ func main() {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
-			//prog failed, slack err message with err output
-			// exitError.ExitCode()
-			fmt.Printf("exit Code = %#v", exitError)
+			exitCode := exitError.ExitCode()
+			slack(&config, runFailedMessage(&config, &exitCode, string(out)))
 		} else {
-			fmt.Printf("out = %#v", out)
-			// slack undefined error with err output
+			slack(&config, runFailedMessage(&config, nil, string(out)))
 		}
 		return
 	}
 
-	//TODO add output if something there
-	slack(&config, runOkMessage(&config))
+	slack(&config, runOkMessage(&config, string(out)))
 }
 
-//err message
-/*
-[
-	{
-		"type": "section",
-		"text": {
-			"type": "mrkdwn",
-			"text": ":red_circle: Mother failed (exit code -1)\n```super long text```"
-		}
-	},
+func runFailedMessage(conf *Config, exitCode *int, output string) *SlackBlock {
+	name := getProgName(conf)
+	var exitCodeStr string
+	if exitCode != nil {
+		exitCodeStr = fmt.Sprintf("%d", *exitCode)
+	} else {
+		exitCodeStr = "unknown"
+	}
 
-]
-*/
+	return section(markdownText(fmt.Sprintf(":red_circle: %s failed (exit code %s)\n```%s```", name, exitCodeStr, output)))
+}
 
-func runOkMessage(conf *Config) *SlackBlock {
+func runOkMessage(conf *Config, output string) *SlackBlock {
+	name := getProgName(conf)
+	text := ""
+	if strings.TrimSpace(output) != "" {
+		text = fmt.Sprintf("\n```%s```", output)
+	}
+	return section(markdownText(fmt.Sprintf(":large_blue_circle: %s ok%s", name, text)))
+}
+
+func getProgName(conf *Config) string {
 	name := fmt.Sprintf("`%s`", conf.Prog)
 	if conf.Name != nil {
 		name = *conf.Name
 	}
-	return section(markdownText(fmt.Sprintf(":large_blue_circle: %s ok", name)))
+	return name
 }
 
 func slack(conf *Config, msg *SlackBlock) {
