@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -26,15 +26,19 @@ type Config struct {
 
 func main() {
 
-	if len(os.Args) != 2 {
-		panic(fmt.Sprintf("No config file given"))
-	}
+	configPtr := flag.String("config", "./config.toml", "config file")
+	dryRunPtr := flag.Bool("dry-run", false, "dry-run")
+	flag.Parse()
 
-	confFile := os.Args[1]
 	config := Config{}
-	_, err := toml.DecodeFile(confFile, &config)
+	_, err := toml.DecodeFile(*configPtr, &config)
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %#v", err))
+	}
+
+	if *dryRunPtr {
+		fmt.Printf("running with config: %#v", config)
+		return
 	}
 
 	cmd := exec.Command(config.Prog, config.Args...)
