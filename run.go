@@ -66,7 +66,12 @@ func runFailedMessage(conf *Config, exitCode *int, output string) *SlackBlock {
 		exitCodeStr = "unknown"
 	}
 
-	return section(markdownText(fmt.Sprintf(":red_circle: %s failed (exit code %s)\n```%s```", name, exitCodeStr, output)))
+	text := ""
+	if strings.TrimSpace(output) != "" {
+		text = fmt.Sprintf("\n```%s```", output)
+	}
+
+	return section(markdownText(fmt.Sprintf(":red_circle: %s failed (exit code %s)%s", name, exitCodeStr, text)))
 }
 
 func runOkMessage(conf *Config, output string) *SlackBlock {
