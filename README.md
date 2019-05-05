@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/Ragnaroek/run-slacker.svg?branch=master)](https://travis-ci.org/Ragnaroek/run-slacker)
+[![codecov](https://codecov.io/gh/Ragnaroek/run-slacker/branch/master/graph/badge.svg)](https://codecov.io/gh/Ragnaroek/run-slacker)
+
 
 # run-slacker
 runs a program, slacks the result
