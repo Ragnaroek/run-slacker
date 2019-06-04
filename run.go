@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -24,17 +25,15 @@ type Config struct {
 	Slack Slack
 }
 
+const CONFIG_ENV_VAR = "RSLACKER_CONFIG"
+
 func main() {
 
 	configPtr := flag.String("config", "./config.toml", "config file")
 	dryRunPtr := flag.Bool("dry-run", false, "dry-run")
 	flag.Parse()
 
-	config := Config{}
-	_, err := toml.DecodeFile(*configPtr, &config)
-	if err != nil {
-		panic(fmt.Sprintf("Error reading config file: %#v", err))
-	}
+	config := getConfigOrPanic(*configPtr)
 
 	if *dryRunPtr {
 		fmt.Printf("running with config: %#v", config)
@@ -55,6 +54,26 @@ func main() {
 	}
 
 	slack(&config, runOkMessage(&config, string(out)))
+}
+
+func getConfigOrPanic(file string) Config {
+	config := Config{}
+	confFromEnv := os.Getenv(CONFIG_ENV_VAR)
+	if confFromEnv == "" {
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			panic("No config file given and RSLACKER_CONFIG not set")
+		}
+		_, err := toml.DecodeFile(file, &config)
+		if err != nil {
+			panic(fmt.Sprintf("Error reading config file: %#v", err))
+		}
+	} else {
+		_, err := toml.Decode(confFromEnv, &config)
+		if err != nil {
+			panic(fmt.Sprintf("Error reading config from environment: %#v", err))
+		}
+	}
+	return config
 }
 
 func runFailedMessage(conf *Config, exitCode *int, output string) *SlackBlock {
