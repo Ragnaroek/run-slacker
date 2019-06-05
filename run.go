@@ -117,7 +117,7 @@ func slack(conf *Config, msg *SlackBlock) {
 	}
 	resp, err := http.Post(conf.Slack.Hook, "application/json", strings.NewReader(string(payloadStr)))
 	if err != nil {
-		panic(fmt.Sprintf("Unexpected error from slack: %#v", resp))
+		panic(fmt.Sprintf("Unexpected error from slack: %#v", err))
 	}
 	if resp.StatusCode != 200 {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
