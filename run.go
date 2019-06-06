@@ -49,7 +49,7 @@ func main() {
 			exitCode := exitError.ExitCode()
 			slack(&config, runFailedMessage(&config, &exitCode, outMessage))
 		} else {
-			outMessage := fmt.Sprintf("error %#v\n-------\n%s", err, string(out))
+			outMessage := fmt.Sprintf("error %#v\n-------\n%s", err.Error(), string(out))
 			slack(&config, runFailedMessage(&config, nil, outMessage))
 		}
 		return
