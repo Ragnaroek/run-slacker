@@ -44,11 +44,12 @@ func main() {
 	cmd.Dir = config.Dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		outMessage := fmt.Sprintf("%#v\n-------\n%s", err, string(out))
 		if exitError, ok := err.(*exec.ExitError); ok {
+			outMessage := fmt.Sprintf("%#v\n-------\n%s", exitError.Error(), string(out))
 			exitCode := exitError.ExitCode()
 			slack(&config, runFailedMessage(&config, &exitCode, outMessage))
 		} else {
+			outMessage := fmt.Sprintf("%#v\n-------\n%s", err, string(out))
 			slack(&config, runFailedMessage(&config, nil, outMessage))
 		}
 		return
