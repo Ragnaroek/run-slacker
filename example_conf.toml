@@ -2,6 +2,8 @@ dir = "/home/user/bin" # working dir of command
 prog = "ls"
 args = ["-alh"]
 name = "ls command" # optional, description of the command (if not set the prog name is used)
+level = "always" # optional, always is the default. "error_or_output" slacks on non-zero exit or if there
+                 # is any output. "error" only slacks on non-zero exit.
 
 [slack]
 hook = "https://add.slack.url.here"

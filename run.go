@@ -19,11 +19,21 @@ type Slack struct {
 
 type Config struct {
 	Name  *string
+	Level *string
+
 	Dir   string
 	Prog  string
 	Args  []string
 	Slack Slack
 }
+
+type Level int
+
+const (
+	Always Level = iota
+	Error_Or_Output
+	Error
+)
 
 const CONFIG_ENV_VAR = "RSLACKER_CONFIG"
 
@@ -34,6 +44,7 @@ func main() {
 	flag.Parse()
 
 	config := getConfigOrPanic(*configPtr)
+	level := getLevelOrPanic(config)
 
 	if *dryRunPtr {
 		fmt.Printf("running with config: %#v", config)
@@ -55,7 +66,27 @@ func main() {
 		return
 	}
 
-	slack(&config, runOkMessage(&config, string(out)))
+	if level == Error {
+		return
+	}
+
+	output := string(out)
+	if strings.TrimSpace(output) == "" && level == Error_Or_Output {
+		return
+	}
+
+	slack(&config, runOkMessage(&config, output))
+}
+
+func getLevelOrPanic(config Config) Level {
+	if config.Level == nil || *config.Level == "Always" {
+		return Always
+	} else if *config.Level == "Error_Or_Output" {
+		return Error_Or_Output
+	} else if *config.Level == "Error" {
+		return Error
+	}
+	panic(fmt.Sprintf("Unknown Level configured: %#v", config.Level))
 }
 
 func getConfigOrPanic(file string) Config {

@@ -78,6 +78,56 @@ func TestGetConfigOrPanic(t *testing.T) {
 	}
 }
 
+func TestGetLevelOrPanic(t *testing.T) {
+
+	tcs := []struct {
+		desc          string
+		config        Config
+		expectedPanic bool
+		expectedLevel Level
+	}{
+		{
+			desc: "default level",
+			config: Config{
+				Level: nil,
+			},
+			expectedLevel: Always,
+		},
+		{
+			desc: "explicit always",
+			config: Config{
+				Level: ptrToStr("Always"),
+			},
+			expectedLevel: Always,
+		},
+		{
+			desc: "error_or_output",
+			config: Config{
+				Level: ptrToStr("Error_Or_Output"),
+			},
+			expectedLevel: Error_Or_Output,
+		},
+		{
+			desc: "error",
+			config: Config{
+				Level: ptrToStr("Error"),
+			},
+			expectedLevel: Error,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.expectedPanic {
+				assert.Panics(t, func() { _ = getLevelOrPanic(tc.config) }, "expected panic")
+			} else {
+				lvl := getLevelOrPanic(tc.config)
+				assert.Equal(t, tc.expectedLevel, lvl)
+			}
+		})
+	}
+}
+
 func TestGetProgName(t *testing.T) {
 	tcs := []struct {
 		desc         string
